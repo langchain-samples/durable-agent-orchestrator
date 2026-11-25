@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="960" viewBox="0 0 1280 960" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    </marker>
+    <style>
+      .t  { font-size: 13px; fill: #0f172a; }
+      .ts { font-size: 11px; fill: #334155; }
+      .tx { font-size: 10px; fill: #64748b; }
+      .h  { font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .hb { font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .ln { stroke: #475569; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+      .lo { stroke: #c2410c; stroke-width: 1.6; fill: none; marker-end: url(#arrO); stroke-dasharray: 6 3; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="960" fill="#ffffff"/>
+  <text x="24" y="34" font-size="20" font-weight="700" fill="#0f172a">Durable multi-agent orchestrator on LangGraph + Agent Server</text>
+  <text x="24" y="54" class="ts">Registry-driven plan · parallel phases with dependency gates · interrupt() approvals · cron-woken timers · crash resume · idempotent retries · saga rollback</text>
+
+  <!-- ================= callers ================= -->
+  <rect x="24" y="74" width="300" height="74" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="38" y="96" class="hb">Operators / ITSM / notebook / Studio</text>
+  <text x="38" y="114" class="ts">start runs · approve or reject gates</text>
+  <text x="38" y="131" class="tx">runs.create(thread, command={resume: {interrupt_id: …}})</text>
+
+  <rect x="560" y="74" width="300" height="74" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="574" y="96" class="hb">External trigger (alternative to cron)</text>
+  <text x="574" y="114" class="ts">system cron · CI · event bus</text>
+  <text x="574" y="131" class="tx">scripts/trigger_waker.py</text>
+
+  <!-- ================= Agent Server ================= -->
+  <rect x="24" y="176" width="860" height="590" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="40" y="200" class="h">Agent Server (LangSmith Deployment)</text>
+  <text x="330" y="200" class="tx">HTTP API · run queue · workers · streaming · auth · crons</text>
+
+  <!-- cron + waker row -->
+  <rect x="300" y="216" width="210" height="80" rx="10" fill="#fff7ed" stroke="#c2410c"/>
+  <text x="314" y="238" class="hb">Cron scheduler</text>
+  <text x="314" y="256" class="ts">crons.create("waker",</text>
+  <text x="314" y="272" class="ts">  schedule="* * * * *")</text>
+  <text x="314" y="288" class="tx">each tick = a traced, stateless run</text>
+
+  <rect x="540" y="216" width="324" height="80" rx="10" fill="#ffffff" stroke="#c2410c"/>
+  <text x="554" y="238" class="hb">Graph: waker  (stateless, ~60 lines)</text>
+  <text x="554" y="256" class="ts">threads.search(status="interrupted") → timer interrupts</text>
+  <text x="554" y="272" class="ts">with wake_at ≤ now → runs.create(thread, command=</text>
+  <text x="554" y="288" class="ts">{resume: {timer_id: wake}})   approvals left untouched</text>
+
+  <path class="lo" d="M510 256 H538"/>
+
+  <!-- orchestrator graph -->
+  <rect x="44" y="316" width="820" height="290" rx="10" fill="#ffffff" stroke="#3b82f6"/>
+  <text x="58" y="338" class="hb">Graph: orchestrator  (domain-agnostic; reads the registry, never names a platform phase)</text>
+
+  <rect x="60" y="356" width="90" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="105" y="381" class="t" text-anchor="middle">plan</text>
+  <rect x="180" y="356" width="110" height="40" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="235" y="374" class="t" text-anchor="middle">dispatch</text>
+  <text x="235" y="389" class="tx" text-anchor="middle">ready steps → Send</text>
+  <rect x="330" y="350" width="156" height="56" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <rect x="336" y="356" width="156" height="56" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="414" y="376" class="t" text-anchor="middle">run_step  ×N parallel</text>
+  <text x="414" y="391" class="tx" text-anchor="middle">gate | sub-agent | compensator</text>
+  <text x="414" y="404" class="tx" text-anchor="middle">RetryPolicy(transient errors)</text>
+  <rect x="180" y="434" width="110" height="36" rx="6" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="235" y="457" class="t" text-anchor="middle">finalize</text>
+
+  <path class="ln" d="M150 376 H178"/>
+  <path class="ln" d="M290 366 H328"/>
+  <path class="ln" d="M336 390 H292"/>
+  <text x="296" y="403" class="tx">results</text>
+  <path class="ln" d="M235 396 V432"/>
+  <text x="242" y="420" class="tx">done / rolled back</text>
+
+  <!-- plan DAG -->
+  <text x="58" y="500" class="ts" font-weight="700">Plan derived from the registry (AI platform use case)</text>
+  <g font-size="10">
+    <rect x="58" y="520" width="50" height="28" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="83" y="538" text-anchor="middle">P0</text>
+    <rect x="128" y="512" width="50" height="22" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="153" y="527" text-anchor="middle">P1</text>
+    <rect x="128" y="540" width="50" height="22" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="153" y="555" text-anchor="middle">P2</text>
+    <rect x="198" y="520" width="50" height="28" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="223" y="538" text-anchor="middle">P3</text>
+    <rect x="268" y="508" width="80" height="24" rx="12" fill="#fef3c7" stroke="#d97706"/><text x="308" y="524" text-anchor="middle">P4a approval</text>
+    <rect x="268" y="540" width="80" height="24" rx="12" fill="#fef3c7" stroke="#d97706"/><text x="308" y="556" text-anchor="middle">P4b window</text>
+    <rect x="368" y="520" width="50" height="28" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="393" y="538" text-anchor="middle">P5</text>
+    <rect x="438" y="520" width="50" height="28" rx="5" fill="#e0e7ff" stroke="#6366f1"/><text x="463" y="538" text-anchor="middle">P6</text>
+  </g>
+  <g class="ln" style="stroke-width:1.2">
+    <path d="M108 529 L126 524"/><path d="M108 540 L126 549"/>
+    <path d="M178 524 L196 529"/><path d="M178 550 L196 540"/>
+    <path d="M248 529 L266 522"/><path d="M248 540 L266 550"/>
+    <path d="M348 522 L366 529"/><path d="M348 552 L366 540"/>
+    <path d="M418 534 L436 534"/>
+  </g>
+  <text x="58" y="584" class="tx">same column = parallel super-step · amber = interrupt() gates</text>
+
+  <text x="530" y="440" class="ts" font-weight="700" fill="#c2410c">Saga mode (design pattern, not built-in)</text>
+  <text x="530" y="457" class="ts" fill="#c2410c">StepFailure → stop forward work →</text>
+  <text x="530" y="472" class="ts" fill="#c2410c">compensators in reverse order, each a durable step</text>
+  <text x="530" y="487" class="ts" fill="#c2410c">P5 fails → C5 rollback → C3 unstage → "rolled_back"</text>
+  <text x="530" y="516" class="ts" font-weight="700">Kill switch</text>
+  <text x="530" y="533" class="ts">crash mid-node → thread status "error" →</text>
+  <text x="530" y="548" class="ts">resume same thread → only unfinished tasks re-run</text>
+  <text x="530" y="572" class="ts" font-weight="700">Lost response</text>
+  <text x="530" y="589" class="ts">retry → same idempotency key → no double apply</text>
+
+  <!-- persistence -->
+  <rect x="44" y="622" width="820" height="128" rx="10" fill="#ffffff" stroke="#0f766e"/>
+  <text x="58" y="644" class="hb">Postgres (managed by Agent Server)</text>
+  <rect x="58" y="654" width="380" height="84" rx="8" fill="#ccfbf1" stroke="#0f766e"/>
+  <text x="72" y="674" class="hb">Checkpointer: threads</text>
+  <text x="72" y="692" class="ts">checkpoint per super-step · pending writes of finished</text>
+  <text x="72" y="707" class="ts">parallel tasks · interrupts + ids · run queue</text>
+  <text x="72" y="726" class="tx">= durable execution state</text>
+  <rect x="452" y="654" width="398" height="84" rx="8" fill="#ccfbf1" stroke="#0f766e"/>
+  <text x="466" y="674" class="hb">Store (long-term key-value)</text>
+  <text x="466" y="692" class="ts">mock AI platform cluster state · idempotency ledger</text>
+  <text x="466" y="707" class="ts">(thread/step/operation → requests, applied, result)</text>
+  <text x="466" y="726" class="tx">demo counters: executions per step, fault markers</text>
+  <path class="ln" d="M414 606 V652"/>
+
+  <!-- ================= right column ================= -->
+  <rect x="910" y="74" width="346" height="140" rx="10" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="926" y="96" class="hb">registry/agents.yaml</text>
+  <text x="926" y="116" class="ts">goals: upgrade.verified · certs.verified</text>
+  <text x="926" y="133" class="ts">agents declare requires / provides artifacts</text>
+  <text x="926" y="150" class="ts">kind: agent | gate (approval, timer) | compensator</text>
+  <text x="926" y="167" class="ts">compensated_by · tools</text>
+  <text x="926" y="196" class="tx">new use case = registry entries + tools; no orchestrator code</text>
+
+  <rect x="910" y="240" width="346" height="250" rx="10" fill="#ffffff" stroke="#7c3aed"/>
+  <text x="926" y="262" class="hb">Sub-agents (create_agent, one per entry)</text>
+  <g font-size="11" fill="#0f172a">
+    <text x="926" y="284">P0 discovery · P1 pre-check · P2 backup verify</text>
+    <text x="926" y="302">P3 prepare &amp; stage · P5 upgrade · P6 verify health</text>
+    <text x="926" y="320">C5 rollback · C3 unstage   (compensators)</text>
+    <text x="926" y="338">CR1–CR4 cert rotation   (second use case)</text>
+  </g>
+  <text x="926" y="362" class="ts">model: SUBAGENT_MODEL (LLM) or scripted (deterministic)</text>
+  <text x="926" y="380" class="ts">checkpointer=False → the step is the unit of durability</text>
+  <rect x="926" y="396" width="314" height="80" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="940" y="416" class="hb">Mock AI platform tools (no real infra)</text>
+  <text x="940" y="434" class="ts">side effects → MockPlatform.apply(idempotency_key)</text>
+  <text x="940" y="450" class="ts">fault injection: kill · lose_response · fail</text>
+  <text x="940" y="466" class="tx">src/mock_platform/</text>
+
+  <rect x="910" y="560" width="346" height="190" rx="10" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="926" y="582" class="hb">LangSmith</text>
+  <text x="926" y="602" class="ts">Tracing: every run, super-step, sub-agent, tool call,</text>
+  <text x="926" y="618" class="ts">retry and resume, grouped by thread</text>
+  <text x="926" y="642" class="ts">Datasets + experiments (evals/run_evals.py):</text>
+  <text x="940" y="660" class="tx">outcome_matches_expected · dependency_gates_respected</text>
+  <text x="940" y="676" class="tx">side_effects_exactly_once · reached_known_good_state</text>
+  <text x="926" y="702" class="ts">Studio: inspect, resume and time-travel threads</text>
+  <text x="926" y="726" class="tx">LANGSMITH_TRACING=true in .env</text>
+
+  <!-- ================= arrows ================= -->
+  <path class="ln" d="M235 148 V354"/>
+  <text x="229" y="232" class="tx" text-anchor="end">start / approve</text>
+  <text x="229" y="245" class="tx" text-anchor="end">(resume)</text>
+  <path class="lo" d="M710 148 V214"/>
+  <text x="716" y="196" class="tx" fill="#c2410c">run waker</text>
+  <path class="lo" d="M700 296 V 364 H 494"/>
+  <text x="706" y="330" class="tx" fill="#c2410c">resume timer interrupt</text>
+  <text x="706" y="343" class="tx" fill="#c2410c">(same thread)</text>
+  <path class="ln" d="M910 162 H 92 V354"/>
+  <text x="760" y="158" class="tx">plan reads the registry</text>
+  <path class="ln" d="M492 384 H908"/>
+  <text x="560" y="378" class="tx">invoke the step's sub-agent</text>
+  <path class="ln" d="M1000 476 V 520 H 896 V 700 H 852"/>
+  <text x="900" y="536" class="tx">tools read/write</text>
+  <path class="ln" d="M884 740 H908"/>
+  <text x="886" y="734" class="tx">traces</text>
+
+  <!-- legend -->
+  <rect x="24" y="790" width="1232" height="150" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="40" y="814" class="hb">Who handles what</text>
+  <text x="40" y="836" class="ts"><tspan font-weight="700">Agent Server / LangGraph (platform):</tspan> checkpoint per super-step, pending writes for finished parallel tasks, interrupt() + Command(resume) with per-interrupt ids, thread status,</text>
+  <text x="40" y="853" class="ts">run queue and workers, node RetryPolicy, cron scheduler, in-process SDK client for the waker, Postgres persistence, HTTP API / streaming / auth, Studio, LangSmith tracing.</text>
+  <text x="40" y="878" class="ts"><tspan font-weight="700">This repo (application code):</tspan> registry + planner, generic run_step, gate payloads, waker sweep (~60 lines), idempotency keys + an idempotent downstream API,</text>
+  <text x="40" y="895" class="ts">saga compensation policy (~40 lines, a design pattern), fault injection, evaluators.</text>
+  <text x="40" y="922" class="tx">Dashed orange = timed-wake path. interrupt() never wakes itself up; a cron or an external trigger resumes the timer interrupt on the same thread.</text>
+</svg>

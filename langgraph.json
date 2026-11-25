@@ -1,0 +1,11 @@
+{
+  "$schema": "https://langgra.ph/schema.json",
+  "python_version": "3.12",
+  "dependencies": ["."],
+  "graphs": {
+    "orchestrator": "./src/durable_orchestrator/graph.py:graph",
+    "waker": "./src/durable_orchestrator/waker.py:graph",
+    "planner": "./src/durable_orchestrator/planner_graph.py:graph"
+  },
+  "env": ".env"
+}

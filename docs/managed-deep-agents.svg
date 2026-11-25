@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="860" viewBox="0 0 1280 860" font-family="Inter, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 13px; fill: #0f172a; }
+      .ts { font-size: 11px; fill: #334155; }
+      .tx { font-size: 10px; fill: #64748b; }
+      .h  { font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .hb { font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .ln { stroke: #475569; stroke-width: 1.5; fill: none; marker-end: url(#arr); }
+      .dash { stroke-dasharray: 5 3; }
+    </style>
+  </defs>
+  <rect width="1280" height="860" fill="#ffffff"/>
+  <text x="24" y="34" font-size="20" font-weight="700" fill="#0f172a">What Managed Deep Agents adds on top of the durable orchestrator</text>
+  <text x="24" y="54" class="ts">upgrade-operator (MDA) = judgment, conversation, approvals-on-behalf, follow-through, memory · durable-orchestrator (Agent Server) = deterministic durable execution</text>
+
+  <!-- surfaces -->
+  <rect x="24" y="72" width="900" height="64" rx="8" fill="#f1f5f9" stroke="#94a3b8"/>
+  <text x="38" y="94" class="hb">Surfaces</text>
+  <text x="38" y="114" class="ts">Studio · SDK / HTTP API · declared + runtime schedules</text>
+  <text x="420" y="114" class="ts" fill="#64748b">Slack channel · Slack approval forms · MCP endpoint (Claude Code)  — available, not configured</text>
+
+  <!-- MDA operator -->
+  <rect x="24" y="158" width="900" height="352" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <text x="40" y="182" class="h">Managed Deep Agent: upgrade-operator</text>
+  <text x="330" y="182" class="tx">Deep Agents harness on a managed Agent Server · `mda deploy` · checkpointer, store and backend supplied by the runtime</text>
+
+  <g>
+    <rect x="44" y="198" width="270" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="58" y="218" class="hb">Managed context (Context Hub)</text>
+    <text x="58" y="236" class="ts">instructions.md: operator rules</text>
+    <text x="58" y="252" class="ts">skills/platform-upgrade-runbook</text>
+    <text x="58" y="268" class="ts">skills/rollback-triage</text>
+    <text x="58" y="283" class="tx">editable in LangSmith without a redeploy</text>
+
+    <rect x="330" y="198" width="280" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="344" y="218" class="hb">Tools → orchestrator SDK</text>
+    <text x="344" y="236" class="ts">preview_plan · start_workflow · get_workflow_status</text>
+    <text x="344" y="252" class="ts">decide_approval_gate · open/cancel window</text>
+    <text x="344" y="268" class="ts">resume_crashed_workflow · inspect_cluster</text>
+    <text x="344" y="283" class="tx">credential: MDA connection "orchestrator-api"</text>
+
+    <rect x="626" y="198" width="280" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="640" y="218" class="hb">Guardrails</text>
+    <text x="640" y="236" class="ts">interrupt_on: human OK before start / approve /</text>
+    <text x="640" y="252" class="ts">open or cancel a window (agent-level HITL)</text>
+    <text x="640" y="268" class="ts">middleware: CHG ticket + written reason (policy as code)</text>
+    <text x="640" y="283" class="tx">on top of the workflow's own interrupt() gates</text>
+
+    <rect x="44" y="304" width="270" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="58" y="324" class="hb">Durable memory (agent layer)</text>
+    <text x="58" y="342" class="ts">/memories/agent/AGENTS.md: cluster conventions,</text>
+    <text x="58" y="358" class="ts">one-line lessons · incidents/&lt;thread&gt;.md postmortems</text>
+    <text x="58" y="374" class="ts">watch-log.md for scheduled checks</text>
+    <text x="58" y="389" class="tx">memory.py · survives redeploys</text>
+
+    <rect x="330" y="304" width="280" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="344" y="324" class="hb">Proactive runs</text>
+    <text x="344" y="342" class="ts">schedules/weekday_change_digest.py (cron 08:00)</text>
+    <text x="344" y="358" class="ts">watch_workflow: agent creates its own runtime</text>
+    <text x="344" y="374" class="ts">schedule, checks until terminal, then stops it</text>
+    <text x="344" y="389" class="tx">runtime.schedules (needs a deployment)</text>
+
+    <rect x="626" y="304" width="280" height="92" rx="8" fill="#ffffff" stroke="#a78bfa"/>
+    <text x="640" y="324" class="hb">Async subagent</text>
+    <text x="640" y="342" class="ts">incident-investigator runs on its own thread</text>
+    <text x="640" y="358" class="ts">while the operator keeps talking; reports back</text>
+    <text x="640" y="374" class="ts">with a postmortem → saved to memory</text>
+    <text x="640" y="389" class="tx">graph upgrade-operator--incident-investigator</text>
+
+    <rect x="44" y="410" width="862" height="84" rx="8" fill="#ede9fe" stroke="#a78bfa"/>
+    <text x="58" y="430" class="hb">Platform pieces MDA wires for you</text>
+    <text x="58" y="448" class="ts">Model via LLM Gateway (langsmith:openai/gpt-5.5, workspace provider key, spend/rate policies) · identity (LangSmith API key auth,</text>
+    <text x="58" y="464" class="ts">private threads) · connections (credentials outside code, rotate without redeploy) · tracing to the upgrade-operator agent's projects ·</text>
+    <text x="58" y="480" class="ts">Harbor evals scaffold (`mda evals init`) · Studio · MCP endpoint · channels (Slack, HTTP, GitHub, Linear)</text>
+  </g>
+
+  <!-- orchestrator -->
+  <rect x="24" y="560" width="900" height="200" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="40" y="584" class="h">Agent Server: durable-orchestrator</text>
+  <text x="370" y="584" class="tx">langgraph deploy · serverless · Postgres checkpoints + store</text>
+  <rect x="44" y="600" width="300" height="140" rx="8" fill="#ffffff" stroke="#3b82f6"/>
+  <text x="58" y="620" class="hb">graph: orchestrator</text>
+  <text x="58" y="638" class="ts">registry → plan with dependency gates</text>
+  <text x="58" y="654" class="ts">P0 → P1 ∥ P2 → P3 → P4a ∥ P4b → P5 → P6</text>
+  <text x="58" y="670" class="ts">interrupt() gates · RetryPolicy · idempotency</text>
+  <text x="58" y="686" class="ts">crash resume · saga rollback (design pattern)</text>
+  <text x="58" y="706" class="tx">deterministic; no LLM required</text>
+  <rect x="360" y="600" width="260" height="66" rx="8" fill="#ffffff" stroke="#c2410c"/>
+  <text x="374" y="620" class="hb">graph: waker</text>
+  <text x="374" y="638" class="ts">Agent Server cron */5 · resumes due</text>
+  <text x="374" y="654" class="ts">timer interrupts (10-day windows)</text>
+  <rect x="360" y="674" width="260" height="66" rx="8" fill="#ffffff" stroke="#3b82f6"/>
+  <text x="374" y="694" class="hb">graph: planner</text>
+  <text x="374" y="712" class="ts">read-only plan preview / goal list</text>
+  <text x="374" y="728" class="tx">so the operator needs no registry copy</text>
+  <rect x="636" y="600" width="270" height="140" rx="8" fill="#ccfbf1" stroke="#0f766e"/>
+  <text x="650" y="620" class="hb">Postgres</text>
+  <text x="650" y="638" class="ts">threads, checkpoints, interrupts</text>
+  <text x="650" y="654" class="ts">store: mock AI platform clusters,</text>
+  <text x="650" y="670" class="ts">idempotency ledger</text>
+
+  <path class="ln" d="M470 510 V556"/>
+  <text x="478" y="532" class="ts">SDK over HTTPS: threads, runs, Command(resume={interrupt_id: …}), store</text>
+  <text x="478" y="547" class="tx">x-api-key from the connection + X-Tenant-Id</text>
+  <path class="ln" d="M470 136 V156"/>
+
+  <!-- LangSmith column -->
+  <rect x="950" y="72" width="306" height="688" rx="12" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="966" y="96" class="h">LangSmith</text>
+  <text x="966" y="124" class="hb">Tracing</text>
+  <text x="966" y="142" class="ts">operator runs + subagents</text>
+  <text x="966" y="158" class="ts">orchestrator runs, steps, tools, retries</text>
+  <text x="966" y="174" class="tx">org-scoped key ⇒ LANGSMITH_WORKSPACE_ID</text>
+  <text x="966" y="206" class="hb">Context Hub</text>
+  <text x="966" y="224" class="ts">instructions, skills, agent memory</text>
+  <text x="966" y="256" class="hb">LLM Gateway</text>
+  <text x="966" y="274" class="ts">model routing, provider keys as</text>
+  <text x="966" y="290" class="ts">workspace secrets, spend / rate limits</text>
+  <text x="966" y="322" class="hb">Connections</text>
+  <text x="966" y="340" class="ts">orchestrator-api (agent-owned secret)</text>
+  <text x="966" y="372" class="hb">Deployments</text>
+  <text x="966" y="390" class="ts">upgrade-operator (mda deploy)</text>
+  <text x="966" y="406" class="ts">durable-orchestrator (langgraph deploy)</text>
+  <text x="966" y="438" class="hb">Evals</text>
+  <text x="966" y="456" class="ts">orchestrator: evals/run_evals.py</text>
+  <text x="966" y="472" class="ts">operator: Harbor tasks (mda evals init)</text>
+  <text x="966" y="504" class="hb">Studio</text>
+  <text x="966" y="522" class="ts">chat with the operator, answer HITL</text>
+  <text x="966" y="538" class="ts">inspect / resume orchestrator threads</text>
+  <path class="ln dash" d="M924 330 H948"/>
+  <path class="ln dash" d="M924 660 H948"/>
+
+  <rect x="24" y="780" width="1232" height="60" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="40" y="802" class="hb">Division of labour</text>
+  <text x="40" y="822" class="ts">The orchestrator guarantees the workflow (ordering, waits, retries, rollback) with no model in the loop. The MDA operator is where language, judgment and</text>
+  <text x="40" y="836" class="ts">follow-through live; everything it does to a change goes through the orchestrator's API, so an LLM mistake can't skip a gate or repeat a side effect.</text>
+</svg>

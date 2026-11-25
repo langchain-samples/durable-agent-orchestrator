@@ -1,0 +1,181 @@
+# Agent registry.
+#
+# The orchestrator knows nothing about the AI platform. It reads this file and plans from it:
+#   * `goals` are the terminal artifacts a caller can ask for.
+#   * Each agent declares the artifacts it `requires` and `provides`.
+#   * The planner backward-chains from the goal artifact to the agents that produce it,
+#     and derives the dependency gates (DAG edges) from requires -> provides.
+#   * `kind: gate` agents are human / timer waits (interrupt()), not LLM agents.
+#   * `compensated_by` names the compensator to run if the saga has to unwind.
+#
+# Add a use case by adding agents + a goal here and tools in a tool module. No orchestrator changes.
+
+tool_modules:
+  - mock_platform.tools
+
+goals:
+  - artifact: upgrade.verified
+    description: Upgrade an AI platform cluster to a target version and verify it is healthy afterwards.
+    keywords: [upgrade, platform, cluster, version, patch]
+    required_params: [cluster_id, target_version]
+  - artifact: certs.verified
+    description: Rotate the TLS certificates of a cluster and verify TLS endpoints afterwards.
+    keywords: [certificate, cert, tls, rotate, rotation]
+    required_params: [cluster_id]
+
+agents:
+  # ---------------------------------------------------------------- AI platform upgrade (P0 - P6)
+  - id: P0_discovery
+    phase: P0
+    name: Discovery
+    description: Inventory the cluster and record current versions. Read-only.
+    requires: []
+    provides: [cluster.inventory]
+    tools: [platform_inventory_cluster, platform_get_versions]
+    instructions: >
+      You are the discovery agent. Call every tool once to inventory the cluster and record
+      the current component versions. Do not change anything. Summarise what you found.
+
+  - id: P1_precheck
+    phase: P1
+    name: Pre-check
+    description: Health, compatibility-matrix and capacity pre-checks against the target version.
+    requires: [cluster.inventory]
+    provides: [precheck.report]
+    tools: [platform_check_health, platform_check_compatibility, platform_check_capacity]
+    instructions: >
+      You are the pre-check agent. Run every pre-check tool once and report whether the cluster
+      is ready for the target version.
+
+  - id: P2_backup_verify
+    phase: P2
+    name: Verify backup state
+    description: Confirm a recent snapshot exists and is restorable (this is the known-good state).
+    requires: [cluster.inventory]
+    provides: [backup.verified]
+    tools: [platform_list_snapshots, platform_take_snapshot, platform_verify_snapshot_restorable, platform_record_known_good]
+    instructions: >
+      You are the backup agent. List snapshots, take a fresh pre-upgrade snapshot, verify that it
+      is restorable and record it as the known-good state. Call every tool once.
+
+  - id: P3_prepare_stage
+    phase: P3
+    name: Prepare and stage
+    description: Download the upgrade bundle, verify the checksum and stage it on every node.
+    requires: [precheck.report, backup.verified]
+    provides: [bundle.staged]
+    tools: [platform_download_bundle, platform_verify_checksum, platform_stage_bundle]
+    compensated_by: C3_unstage
+    instructions: >
+      You are the staging agent. Download the bundle, verify its checksum and stage it on all
+      nodes. Call every tool once.
+
+  - id: P4a_change_approval
+    phase: P4
+    name: Change approval
+    kind: gate
+    description: Human change-approval (CAB) gate.
+    requires: [bundle.staged]
+    provides: [change.approved]
+    gate:
+      type: approval
+      prompt: Approve the AI platform upgrade change request?
+      approver_role: change-advisory-board
+
+  - id: P4b_maintenance_window
+    phase: P4
+    name: Maintenance window
+    kind: gate
+    description: Wait until the maintenance window opens (can be days away).
+    requires: [bundle.staged]
+    provides: [window.open]
+    gate:
+      type: timer
+      at_param: maintenance_window_start      # ISO-8601 timestamp, or
+      delay_param: maintenance_window_delay   # duration from planning time, e.g. "10d", "90s"
+
+  - id: P5_upgrade
+    phase: P5
+    name: Run the upgrade
+    description: Drain, upgrade control plane then worker nodes, uncordon.
+    requires: [change.approved, window.open, bundle.staged, backup.verified]
+    provides: [cluster.upgraded]
+    tools: [platform_drain_nodes, platform_upgrade_control_plane, platform_upgrade_workers, platform_uncordon_nodes]
+    compensated_by: C5_rollback
+    compensate_on_failure: true   # a failed upgrade can leave partial side effects behind
+    instructions: >
+      You are the upgrade agent. Drain the nodes, upgrade the control plane, upgrade the workers
+      and uncordon the nodes, in that order. Call every tool once.
+
+  - id: P6_verify_health
+    phase: P6
+    name: Verify health
+    description: Post-upgrade health and smoke tests.
+    requires: [cluster.upgraded]
+    provides: [upgrade.verified]
+    tools: [platform_get_versions, platform_check_health, platform_run_smoke_tests]
+    instructions: >
+      You are the verification agent. Confirm versions, check health and run smoke tests.
+      Call every tool once and report pass / fail.
+
+  # ---------------------------------------------------------------- compensators (saga)
+  - id: C5_rollback
+    kind: compensator
+    name: Roll back upgrade
+    description: Restore the known-good snapshot recorded by the backup agent.
+    tools: [platform_restore_snapshot, platform_confirm_known_good]
+    instructions: >
+      You are the rollback agent. Restore the known-good snapshot and confirm the cluster is back
+      to its known-good version and healthy. Call every tool once.
+
+  - id: C3_unstage
+    kind: compensator
+    name: Unstage bundle
+    description: Remove the staged upgrade bundle from all nodes.
+    tools: [platform_unstage_bundle]
+    instructions: >
+      You are the cleanup agent. Remove the staged bundle from all nodes. Call the tool once.
+
+  # ---------------------------------------------------------------- second use case: cert rotation
+  - id: CR1_cert_inventory
+    name: Certificate inventory
+    description: List certificates and their expiry.
+    requires: []
+    provides: [certs.inventory]
+    tools: [certs_list]
+    instructions: You inventory TLS certificates. Call the tool once and summarise expiries.
+
+  - id: CR2_rotation_approval
+    name: Rotation approval
+    kind: gate
+    description: Security team approval for the rotation.
+    requires: [certs.inventory]
+    provides: [rotation.approved]
+    gate:
+      type: approval
+      prompt: Approve TLS certificate rotation?
+      approver_role: security
+
+  - id: CR3_rotate
+    name: Rotate certificates
+    description: Issue and install new certificates.
+    requires: [rotation.approved, certs.inventory]
+    provides: [certs.rotated]
+    tools: [certs_issue, certs_install]
+    compensated_by: CRC_restore_certs
+    instructions: You rotate TLS certificates. Issue then install. Call every tool once.
+
+  - id: CR4_verify_tls
+    name: Verify TLS
+    description: Probe TLS endpoints.
+    requires: [certs.rotated]
+    provides: [certs.verified]
+    tools: [certs_probe_endpoints]
+    instructions: You verify TLS endpoints. Call the tool once.
+
+  - id: CRC_restore_certs
+    kind: compensator
+    name: Restore previous certificates
+    description: Reinstall the previous certificate bundle.
+    tools: [certs_restore_previous]
+    instructions: You restore the previous certificates. Call the tool once.

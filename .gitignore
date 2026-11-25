@@ -1,0 +1,19 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+credentials.json
+
+# local state / build output
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.langgraph_api/
+.demo/
+.mda/
+.ipynb_checkpoints/
+.DS_Store

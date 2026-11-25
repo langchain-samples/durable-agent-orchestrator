@@ -1,0 +1,17 @@
+[project]
+name = "upgrade-operator"
+version = "0.1.0"
+description = "Managed Deep Agent that operates the durable AI platform upgrade orchestrator."
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "managed-deepagents==0.10.5",
+    "langgraph-sdk>=0.4.0",
+    "langchain-openai>=1.8.5",
+]
+
+[tool.mda]
+python-version = "3.12"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

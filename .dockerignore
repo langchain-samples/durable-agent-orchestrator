@@ -1,0 +1,11 @@
+.env
+.env.*
+.venv/
+.demo/
+.langgraph_api/
+.mda/
+upgrade-operator/
+notebooks/
+docs/
+tests/
+**/__pycache__/

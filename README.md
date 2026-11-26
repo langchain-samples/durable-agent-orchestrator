@@ -1,6 +1,6 @@
 # Durable multi-agent orchestrator on LangGraph + Agent Server
 
-A demo orchestrator for a long-running **AI platform upgrade** workflow, run on **Agent Server**. It is built to be compared against a Temporal implementation on the properties that matter for that kind of workflow:
+A demo orchestrator for a long-running **AI platform upgrade** workflow, run on **Agent Server**. It is built to be compared against a another Workflow Orchestrator implementation on the properties that matter for that kind of workflow:
 
 - **Durable execution.** Kill a node mid-run, then resume from the last successful step. Finished parallel steps do not re-run.
 - **Human approval waits.** `interrupt()` gates, resumed on the same thread with `Command(resume=...)`. Two gates can pause in parallel and resume independently.
@@ -74,7 +74,7 @@ START → plan → dispatch ──Send(step)×N──▶ run_step ──▶ disp
 | Planner | `planner.py` | Picks the goal (explicit `target`, an LLM if `PLANNER_MODEL` is set, or keyword match), backward-chains to the agents that are needed, derives the dependency gates from requires→provides, and layers the DAG topologically. Timer gates get an absolute `wake_at` **once, at plan time**, so replays are deterministic. |
 | Scheduler | `graph.py` (`dispatch` + `route`) | Each pass sends every step whose dependencies have all succeeded. Steps that are ready together run in the **same super-step** (P1 ∥ P2, P4a ∥ P4b). After a `StepFailure` it switches to saga mode. |
 | Executor | `graph.py` (`run_step`) | One generic node: runs a gate, a sub-agent, or a compensator. `RetryPolicy(retry_on=TransientInfraError)`. |
-| Sub-agents | `subagent.py` | `create_agent` per registry entry, with that entry's mock tools. `SUBAGENT_MODEL` selects an LLM. If it is unset, a deterministic `ScriptedToolCaller` calls each tool once (reproducible, no keys needed). The sub-agent runs with `checkpointer=False`: **the step is the unit of durability**, like a Temporal activity. |
+| Sub-agents | `subagent.py` | `create_agent` per registry entry, with that entry's mock tools. `SUBAGENT_MODEL` selects an LLM. If it is unset, a deterministic `ScriptedToolCaller` calls each tool once (reproducible, no keys needed). The sub-agent runs with `checkpointer=False`: **the step is the unit of durability**, like a Workflow Engine's activity. |
 | Gates | `gates.py` | `interrupt()` with a typed payload. Approval resume value: `{"approved": bool, "approver", "comment"}`. Timer resume values: `{"action": "wake", "now"}`, `{"action": "override"}`, or `{"action": "cancel"}`. Invalid or early answers re-suspend the gate. |
 | Waker | `waker.py` | Stateless graph run on a cron. It finds interrupted threads, picks timer interrupts with `wake_at ≤ now`, and resumes **only those interrupt ids**. |
 | Saga | `saga.py` | **Design pattern, not built-in.** Reverse-order compensators, one durable step each. |
@@ -122,7 +122,7 @@ To add a use case, add registry entries and a tool module. `CR1–CR4` (cert rot
 | Durable state | Checkpoint per super-step in Postgres. Each finished parallel task's writes are saved as soon as it finishes, so a crash re-runs only unfinished tasks | A state machine + persistence layer + "what already ran" bookkeeping | – |
 | Resume after a crash | Re-invoke the thread (`input=None`) and it continues from the last checkpoint. Runs whose worker stops heart-beating are re-queued (`BG_JOB_MAX_RETRIES`, default 3) | A recovery and replay process | – |
 | Human waits | `interrupt()`, thread status `interrupted`, per-interrupt ids, `Command(resume=…)`, resume-by-id for parallel waits, Studio UI to answer them | A callback/signal API, correlation ids, a wait-state table | Gate payload schema + validation |
-| Long timers | Cron scheduler, stateless runs, in-process SDK client (`get_client()` with no URL), delayed runs (`after_seconds`) | A durable timer service | The ~60-line `waker` sweep. A paused `interrupt()` has no built-in timer (unlike Temporal's `workflow.sleep`) |
+| Long timers | Cron scheduler, stateless runs, in-process SDK client (`get_client()` with no URL), delayed runs (`after_seconds`) | A durable timer service | The ~60-line `waker` sweep. A paused `interrupt()` has no built-in timer (unlike other workflow engine's `workflow.sleep`) |
 | Retries | `RetryPolicy` per node (backoff, jitter, `retry_on`) | Retry loops | Error taxonomy: transient vs business vs crash |
 | Idempotency | – (you need this on any engine) | – | Deterministic keys + idempotent downstream API |
 | Compensation | Durable steps to build it on | Saga coordinator | `saga.py` (~40 lines, **a design pattern**) |
@@ -130,9 +130,9 @@ To add a use case, add registry entries and a tool module. `CR1–CR4` (cert rot
 | API, streaming, auth, multi-tenancy | Built in (threads, runs, assistants, crons, store; custom auth) | API service | – |
 | Tracing / evals | LangSmith: traces grouped by thread, datasets, experiments, Studio | A tracing stack + eval harness | 4 code evaluators |
 
-### Mapping to Temporal concepts
+### Mapping to Workflow Engine concepts
 
-| Temporal | Here |
+| Workflow Engine | Here |
 |---|---|
 | Workflow execution | Thread running the `orchestrator` graph |
 | Activity | `run_step` (one sub-agent step). Retries via `RetryPolicy`, and it must be idempotent |
